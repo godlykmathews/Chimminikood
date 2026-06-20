@@ -2,14 +2,10 @@ import { useState, useEffect, useRef } from 'react'
 import './App.css'
 
 function App() {
-  const [videoEnded, setVideoEnded] = useState(false)
-  const [isAutoplayBlocked, setIsAutoplayBlocked] = useState(false)
-  const [videoStarted, setVideoStarted] = useState(false)
   const [isMobile, setIsMobile] = useState(false)
   const [statsInView, setStatsInView] = useState(false)
   const [heroInView, setHeroInView] = useState(false)
   
-  const videoRef = useRef(null)
   const statsRef = useRef(null)
   const heroRef = useRef(null)
 
@@ -65,61 +61,26 @@ function App() {
     }
   }, [])
 
-  // Handle autoplay policies and scroll resets on mount
+  // Scroll to top on mount, then scroll to main content after 2 seconds
   useEffect(() => {
-    // Force scroll to top on reload and disable browser scroll restoration
     if ('scrollRestoration' in window.history) {
       window.history.scrollRestoration = 'manual'
     }
     window.scrollTo(0, 0)
 
-    const video = videoRef.current
-    if (video) {
-      // Set to play automatically
-      const playPromise = video.play()
-      if (playPromise !== undefined) {
-        playPromise
-          .then(() => {
-            setVideoStarted(true)
-          })
-          .catch((error) => {
-            console.log("Autoplay was blocked by browser. Showing fallback play button.", error)
-            setIsAutoplayBlocked(true)
-          })
+    const timer = setTimeout(() => {
+      const nextSection = document.getElementById('about-us')
+      if (nextSection) {
+        nextSection.scrollIntoView({ behavior: 'smooth' })
       }
-    }
+    }, 2000)
+
+    return () => clearTimeout(timer)
   }, [])
 
 
 
-  const handlePlayManual = () => {
-    const video = videoRef.current
-    if (video) {
-      video.play()
-        .then(() => {
-          setIsAutoplayBlocked(false)
-          setVideoStarted(true)
-        })
-        .catch(err => {
-          console.error("Manual playback failed:", err)
-        })
-    }
-  }
 
-  const handleVideoEnd = () => {
-    setVideoEnded(true)
-    if (window.innerWidth > 768) {
-      // Only auto-scroll down if the user has not scrolled down manually yet
-      if (window.scrollY < 50) {
-        setTimeout(() => {
-          const nextSection = document.getElementById('about-us')
-          if (nextSection) {
-            nextSection.scrollIntoView({ behavior: 'smooth' })
-          }
-        }, 100)
-      }
-    }
-  }
 
 
 
@@ -129,31 +90,15 @@ function App() {
     <>
       {/* 2. Full-Screen Intro Video Section */}
       <section className="video-section">
-        <video
-          ref={videoRef}
-          src="/videos/initial-video.mp4"
-          className={`fullscreen-video ${videoStarted ? 'playing' : ''}`}
-          autoPlay
-          muted
-          playsInline
-          onPlay={() => setVideoStarted(true)}
-          onEnded={handleVideoEnd}
+        <img
+          src="images/background.png"
+          className="fullscreen-video playing"
+          alt="Background"
         />
         
 
 
-        {/* Autoplay Blocker Overlay */}
-        {isAutoplayBlocked && (
-          <div className="autoplay-blocked-overlay">
-            <button onClick={handlePlayManual} className="play-trigger-btn" aria-label="Play Video">
-              <svg className="play-icon-svg" viewBox="0 0 24 24">
-                <path d="M8 5v14l11-7z" />
-              </svg>
-            </button>
-            <h2 style={{ fontSize: '1.5rem', marginBottom: '8px' }}>Welcome to Chimminikoodu</h2>
-            <p style={{ maxWidth: '400px', fontSize: '0.9rem' }}>Click the button to play the intro experience and enter the hub.</p>
-          </div>
-        )}
+
       </section>
 
       {/* 3. Main Site Wrapper */}
